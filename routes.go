@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func (f *Framingo) routes() http.Handler {
+func (f *FraminGo) routes() http.Handler {
 	mux := chi.NewRouter()
 	mux.Use(middleware.RequestID)
 	mux.Use(middleware.RealIP)

@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"fmt"
@@ -15,10 +15,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
-	"github.com/mirei965/framingo/cache"
-	"github.com/mirei965/framingo/mailer"
-	"github.com/mirei965/framingo/render"
-	"github.com/mirei965/framingo/session"
+	"github.com/mirei965/framinGo/cache"
+	"github.com/mirei965/framinGo/mailer"
+	"github.com/mirei965/framinGo/render"
+	"github.com/mirei965/framinGo/session"
 	"github.com/robfig/cron/v3"
 )
 
@@ -31,7 +31,7 @@ var badgerConn *badger.DB
 
 // Celeritas is the overall type for the Celeritas package. Members that are exported in this type
 // are available to any application that uses it.
-type Framingo struct {
+type FraminGo struct {
 	AppName    string
 	Debug      bool
 	Version    string
@@ -69,7 +69,7 @@ type config struct {
 
 // New reads the .env file, creates our application config, populates the Celeritas type with settings
 // based on .env values, and creates necessary folders and files if they don't exist
-func (f *Framingo) New(rootPath string) error {
+func (f *FraminGo) New(rootPath string) error {
 	pathConfig := initPaths{
 		rootPath:    rootPath,
 		folderNames: []string{"handlers", "migrations", "views", "mail", "data", "public", "tmp", "logs", "middleware"},
@@ -218,7 +218,7 @@ func (f *Framingo) New(rootPath string) error {
 }
 
 // Init creates necessary folders for our Celeritas application
-func (f *Framingo) Init(p initPaths) error {
+func (f *FraminGo) Init(p initPaths) error {
 	root := p.rootPath
 	for _, path := range p.folderNames {
 		// create folder if it doesn't exist
@@ -231,7 +231,7 @@ func (f *Framingo) Init(p initPaths) error {
 }
 
 // ListenAndServe starts the web server
-func (f *Framingo) ListenAndServe() {
+func (f *FraminGo) ListenAndServe() {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", os.Getenv("PORT")),
 		ErrorLog:     f.ErrorLog,
@@ -258,7 +258,7 @@ func (f *Framingo) ListenAndServe() {
 	f.ErrorLog.Fatal(err)
 }
 
-func (f *Framingo) checkDotEnv(path string) error {
+func (f *FraminGo) checkDotEnv(path string) error {
 	err := f.CreateFileIfNotExists(fmt.Sprintf("%s/.env", path))
 	if err != nil {
 		return err
@@ -266,7 +266,7 @@ func (f *Framingo) checkDotEnv(path string) error {
 	return nil
 }
 
-func (f *Framingo) startLoggers() (*log.Logger, *log.Logger) {
+func (f *FraminGo) startLoggers() (*log.Logger, *log.Logger) {
 	var infoLog *log.Logger
 	var errorLog *log.Logger
 
@@ -276,7 +276,7 @@ func (f *Framingo) startLoggers() (*log.Logger, *log.Logger) {
 	return infoLog, errorLog
 }
 
-func (f *Framingo) createRenderer() {
+func (f *FraminGo) createRenderer() {
 	myRenderer := render.Render{
 		Renderer: f.config.renderer,
 		RootPath: f.RootPath,
@@ -288,7 +288,7 @@ func (f *Framingo) createRenderer() {
 }
 
 // Mailerを作成する
-func (f *Framingo) createMailer() *mailer.Mail {
+func (f *FraminGo) createMailer() *mailer.Mail {
 	port, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
 	m := mailer.Mail{
 		Domain:      os.Getenv("MAIL_DOMAIN"),
@@ -310,7 +310,7 @@ func (f *Framingo) createMailer() *mailer.Mail {
 }
 
 // RedisCacheを作成する
-func (f *Framingo) createClientRedisCache() *cache.RedisCache {
+func (f *FraminGo) createClientRedisCache() *cache.RedisCache {
 	cacheClient := cache.RedisCache{
 		Conn:   f.createRedisPool(),
 		Prefix: f.config.redis.prefix,
@@ -320,7 +320,7 @@ func (f *Framingo) createClientRedisCache() *cache.RedisCache {
 }
 
 // BadgerCacheを作成する
-func (f *Framingo) createClientBadgerCache() *cache.BadgerCache {
+func (f *FraminGo) createClientBadgerCache() *cache.BadgerCache {
 	cacheClient := cache.BadgerCache{
 		Conn:   f.createBadgerConn(),
 		Prefix: f.config.redis.prefix,
@@ -329,7 +329,7 @@ func (f *Framingo) createClientBadgerCache() *cache.BadgerCache {
 	return &cacheClient
 }
 
-func (f *Framingo) createRedisPool() *redis.Pool {
+func (f *FraminGo) createRedisPool() *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     50,
 		MaxActive:   10000,
@@ -348,7 +348,7 @@ func (f *Framingo) createRedisPool() *redis.Pool {
 	}
 }
 
-func (f *Framingo) createBadgerConn() *badger.DB {
+func (f *FraminGo) createBadgerConn() *badger.DB {
 	db, err := badger.Open(badger.DefaultOptions(f.RootPath + "/tmp/badger"))
 	if err != nil {
 		return nil
@@ -357,7 +357,7 @@ func (f *Framingo) createBadgerConn() *badger.DB {
 }
 
 // BuildDSN builds the datasource name for our database, and returns it as a string
-func (f *Framingo) BuildDSN() string {
+func (f *FraminGo) BuildDSN() string {
 	var dsn string
 
 	switch os.Getenv("DATABASE_TYPE") {

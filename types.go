@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import "database/sql"
 

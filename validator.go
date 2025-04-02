@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"net/http"
@@ -14,7 +14,7 @@ type Validation struct {
   Errors map[string]string
 }
 
-func (f *Framingo) Validator(data url.Values) *Validation {
+func (f *FraminGo) Validator(data url.Values) *Validation {
   return &Validation{
     Data: data,
     Errors: make(map[string]string),

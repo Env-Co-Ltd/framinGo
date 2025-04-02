@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"crypto/aes"
@@ -13,7 +13,7 @@ const (
 	randomString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_+"
 )
 //RandomStringは、指定された長さ(n)のランダムな文字列を生成する関数
-func (f *Framingo) RandomString(n int) string {
+func (f *FraminGo) RandomString(n int) string {
 	s, r := make([]rune, n),[]rune(randomString)
 
 	for i := range s {
@@ -24,7 +24,7 @@ func (f *Framingo) RandomString(n int) string {
 	return string(s)
 }
 
-func (f *Framingo) CreateDirIfNotExist(path string) error {
+func (f *FraminGo) CreateDirIfNotExist(path string) error {
 	const mode = 0755 // モードを定義
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err := os.MkdirAll(path, mode)
@@ -35,7 +35,7 @@ func (f *Framingo) CreateDirIfNotExist(path string) error {
 	return nil
 }
 
-func (f *Framingo) CreateFileIfNotExists(path string) error {
+func (f *FraminGo) CreateFileIfNotExists(path string) error {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		var file, err = os.Create(path)

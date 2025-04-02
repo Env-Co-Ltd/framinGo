@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/fatih/color"
-	"github.com/mirei965/framingo"
+	"github.com/mirei965/framinGo"
 )
 
 const version = "1.0.0"
 
-var fra framingo.Framingo
+var fra framinGo.FraminGo
 
 func main() {
 	var message string

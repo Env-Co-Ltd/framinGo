@@ -1,4 +1,4 @@
-module github.com/mirei965/framingo
+module github.com/mirei965/framinGo
 
 go 1.23.5
 

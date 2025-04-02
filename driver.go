@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-func (f *Framingo) OpenDB(datbType, dsn string) (*sql.DB, error) {
+func (f *FraminGo) OpenDB(datbType, dsn string) (*sql.DB, error) {
 	var dbType string
 
 	if datbType == "postgres" || datbType == "postgresql" {

@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (f *Framingo) LoadTime(start time.Time) {
+func (f *FraminGo) LoadTime(start time.Time) {
 	elapsed := time.Since(start)
 	pc, _, _, _ := runtime.Caller(1)
 	funcObj := runtime.FuncForPC(pc)

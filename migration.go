@@ -1,4 +1,4 @@
-package framingo
+package framinGo
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func (f *Framingo) MigrateUp(dsn string) error {
+func (f *FraminGo) MigrateUp(dsn string) error {
 	m, err := migrate.New("file://"+f.RootPath+"/migrations", dsn)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (f *Framingo) MigrateUp(dsn string) error {
 	return nil
 }
 
-func (f *Framingo) MigrateDownAll(dsn string) error {
+func (f *FraminGo) MigrateDownAll(dsn string) error {
 	m, err := migrate.New("file://"+f.RootPath+"/migrations", dsn)
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (f *Framingo) MigrateDownAll(dsn string) error {
 	return nil
 }
 
-func (f *Framingo) Steps(n int, dsn string) error {
+func (f *FraminGo) Steps(n int, dsn string) error {
 	m, err := migrate.New("file://"+f.RootPath+"/migrations", dsn)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (f *Framingo) Steps(n int, dsn string) error {
 	return nil
 }
 
-func (f *Framingo) MigrateForce(dsn string) error {
+func (f *FraminGo) MigrateForce(dsn string) error {
 	m, err := migrate.New("file://"+f.RootPath+"/migrations", dsn)
 	if err != nil {
 		return err
