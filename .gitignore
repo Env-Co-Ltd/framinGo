@@ -1,6 +1,5 @@
 .idea
 coverage.out
 dist/*
-cache/
 *.mem
 *.vlog
