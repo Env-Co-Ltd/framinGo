@@ -12,12 +12,12 @@ coverage:
 
 ## build_cli: builds the command line tool framingo and copies it to myapp
 build_cli:
-	@go build -o ../myapp/framingo ./cmd/cli
+	@go build -o ../myapp/framinGo ./cmd/cli
 
 ## build_cli: builds the command line tool framingo and copies it to myapp for Windows
 build_cli_windows:
-	@go build -o ../myapp/framingo.exe ./cmd/cli
+	@go build -o ../myapp/framinGo.exe ./cmd/cli
 
 ## build: builds the command line tool to dist directoory
 build:
-	@go build -o ./dist/framingo ./cmd/cli
+	@go build -o ./dist/framinGo ./cmd/cli
