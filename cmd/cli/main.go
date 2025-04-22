@@ -20,7 +20,7 @@ func main() {
 		exitGracefully(err)
 	}
 
-	setup(arg1, arg2, arg3)
+	setup(arg1, arg2 )
 
 	switch arg1 {
 	case "help":

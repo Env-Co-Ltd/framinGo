@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func setup(arg1, arg2, arg3 string) {
+func setup(arg1, arg2 string) {
 	if arg1 != "new" && arg1 != "version" && arg1 != "help" {
 		err := godotenv.Load()
 		if err != nil {
