@@ -18,6 +18,6 @@ build_cli:
 build_cli_windows:
 	@go build -o ../myapp/framinGo.exe ./cmd/cli
 
-## build: builds the command line tool to dist directoory
+## build: builds the command line tool to dist directory
 build:
 	@go build -o ./dist/framinGo ./cmd/cli
