@@ -59,7 +59,11 @@ func doNew(appName string) {
 	if runtime.GOOS == "windows" {
 		source, err := os.Open(fmt.Sprintf("./%s/Makefile.windows", appName))
 		if err != nil {
-			exitGracefully(err)
+			// If Makefile.windows doesn't exist, use the default Makefile
+			source, err = os.Open(fmt.Sprintf("./%s/Makefile", appName))
+			if err != nil {
+				exitGracefully(err)
+			}
 		}
 		defer source.Close()
 		destination, err := os.Create(fmt.Sprintf("./%s/Makefile", appName))
@@ -74,7 +78,11 @@ func doNew(appName string) {
 	} else {
 		source, err := os.Open(fmt.Sprintf("./%s/Makefile.mac", appName))
 		if err != nil {
-			exitGracefully(err)
+			// If Makefile.mac doesn't exist, use the default Makefile
+			source, err = os.Open(fmt.Sprintf("./%s/Makefile", appName))
+			if err != nil {
+				exitGracefully(err)
+			}
 		}
 		defer source.Close()
 		destination, err := os.Create(fmt.Sprintf("./%s/Makefile", appName))
@@ -88,6 +96,7 @@ func doNew(appName string) {
 		}
 	}
 
+	// Only try to remove if they exist
 	_ = os.Remove(fmt.Sprintf("./%s/Makefile.mac", appName))
 	_ = os.Remove(fmt.Sprintf("./%s/Makefile.windows", appName))
 

@@ -1,0 +1,29 @@
+## test: runs all tests
+test:
+	@go test -v ./...
+
+## cover: opens coverage in browser
+cover:
+	@go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out
+
+## coverage: displays test coverage
+coverage:
+	@go test -cover ./...
+
+## build: builds the application
+build:
+	@go build -o ./tmp/main ./cmd/web
+
+## start: starts the application
+start:
+	@go run ./cmd/web
+
+## clean: cleans up
+clean:
+	@rm -rf tmp
+	@rm -f coverage.out
+
+## help: displays help
+help:
+	@echo "Usage:"
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /' 
