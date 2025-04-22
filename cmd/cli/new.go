@@ -28,7 +28,7 @@ func doNew(appName string) {
 	//git clone the skeleton application
 	color.Green("\tCloning repository...")
 	_, err := git.PlainClone("./"+appName, false, &git.CloneOptions{
-		URL:      "https://github.com/Env-Co-Ltd/framinGo.git",
+		URL:      "https://github.com/Env-Co-Ltd/framinGo-starter.git",
 		Progress: os.Stdout,
 		Depth:    1,
 	})
