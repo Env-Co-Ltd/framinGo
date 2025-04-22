@@ -4,8 +4,8 @@ import (
 	"errors"
 	"os"
 
+	"github.com/Env-Co-Ltd/framinGo"
 	"github.com/fatih/color"
-	"github.com/mirei965/framinGo"
 )
 
 const version = "1.0.0"
@@ -15,16 +15,21 @@ var fra framinGo.FraminGo
 func main() {
 	var message string
 
-	arg1, arg2, arg3, err := validateInput()
+	arg1, arg2, arg3, arg4, err := validateInput()
 	if err != nil {
 		exitGracefully(err)
 	}
 
-	setup(arg1, arg2)
+	setup(arg1, arg2, arg3)
 
 	switch arg1 {
 	case "help":
 		showHelp()
+
+	case "up":
+		rpcClient(false)
+	case "down":
+		rpcClient(true)
 
 	case "new":
 		if arg2 == "" {
@@ -43,13 +48,13 @@ func main() {
 		if err != nil {
 			exitGracefully(err)
 		}
-		message = "Migrations created successfully"
+		message = color.GreenString("Migrations created successfully")
 
 	case "make":
 		if arg2 == "" {
 			exitGracefully(errors.New("make needs a subcommand: (migrarion|model|handler|auth)"))
 		}
-		err = doMake(arg2, arg3)
+		err = doMake(arg2, arg3, arg4)
 		if err != nil {
 			exitGracefully(err)
 		}
@@ -60,8 +65,8 @@ func main() {
 	exitGracefully(nil, message)
 }
 
-func validateInput() (string, string, string, error) {
-	var arg1, arg2, arg3 string
+func validateInput() (string, string, string, string, error) {
+	var arg1, arg2, arg3, arg4 string
 
 	if len(os.Args) > 1 {
 		arg1 = os.Args[1]
@@ -71,12 +76,15 @@ func validateInput() (string, string, string, error) {
 		if len(os.Args) >= 4 {
 			arg3 = os.Args[3]
 		}
+		if len(os.Args) >= 5 {
+			arg4 = os.Args[4]
+		}
 	} else {
 		color.Red("Error: command required")
 		showHelp()
-		return "", "", "", errors.New("command required")
+		return "", "", "", "", errors.New("command required")
 	}
-	return arg1, arg2, arg3, nil
+	return arg1, arg2, arg3, arg4, nil
 }
 
 func exitGracefully(err error, msg ...string) {

@@ -1,14 +1,85 @@
 package framinGo
 
 import (
-	"log"
+	"github.com/gobuffalo/pop"
 	"github.com/golang-migrate/migrate/v4"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
-  _ "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
+
+func (f *FraminGo) PopConnect() (*pop.Connection, error) {
+	tx, err := pop.Connect("development")
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func (f *FraminGo) CreatePopMigration(up, down []byte, migrationName, migrationType string) error {
+	var migrationPath = f.RootPath + "/migrations/"
+	err := pop.MigrationCreate(migrationPath, migrationName, migrationType, up, down)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *FraminGo) RunPopMigrations(tx *pop.Connection) error {
+	var migrationPath = f.RootPath + "/migrations/"
+
+	fm, err := pop.NewFileMigrator(migrationPath, tx)
+	if err != nil {
+		return err
+	}
+
+	err = fm.Up()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *FraminGo) PopMigrationsDown(tx *pop.Connection, steps ...int) error {
+	var migrationPath = f.RootPath + "/migrations/"
+
+	step := 1
+	if len(steps) > 0 {
+		step = steps[0]
+	}
+
+	fm, err := pop.NewFileMigrator(migrationPath, tx)
+	if err != nil {
+		return err
+	}
+
+	err = fm.Down(step)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *FraminGo) PopMigrationsReset(tx *pop.Connection) error {
+	var migrationPath = f.RootPath + "/migrations/"
+
+	fm, err := pop.NewFileMigrator(migrationPath, tx)
+	if err != nil {
+		return err
+	}
+
+	err = fm.Reset()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (f *FraminGo) MigrateUp(dsn string) error {
 	m, err := migrate.New("file://"+f.RootPath+"/migrations", dsn)
@@ -30,9 +101,9 @@ func (f *FraminGo) MigrateDownAll(dsn string) error {
 		return err
 	}
 	defer m.Close()
-  if err := m.Down(); err != nil {
-    return err
-  }
+	if err := m.Down(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -54,7 +125,7 @@ func (f *FraminGo) MigrateForce(dsn string) error {
 		return err
 	}
 	defer m.Close()
-  
+
 	if err := m.Force(-1); err != nil {
 		return err
 	}

@@ -2,42 +2,45 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 )
 
-func doMake(arg2, arg3 string) error {
+func doMake(arg2, arg3, arg4 string) error {
 	switch arg2 {
-		//暗号化キーを生成
+	//暗号化キーを生成
 	case "key":
 		rnd := fra.RandomString(32)
 		color.Yellow("320character encryption key: %s", rnd)
 		color.Yellow("Please save this key in a secure location.")
+
 	case "migration":
-		dbType := fra.DB.DataType
+		checkForDB()
+		// dbType := fra.DB.DataType
 		if arg3 == "" {
 			exitGracefully(errors.New("migration name required"))
 		}
+		migrationType := "fizz"
+		var up, down string
+		if arg4 == "fizz" || arg4 == "" {
+			upBytes, _ := templateFS.ReadFile("templates/migrations/migration_up.fizz")
+			downBytes, _ := templateFS.ReadFile("templates/migrations/migration_down.fizz")
 
-		fileName := fmt.Sprintf("%d_%s", time.Now().UnixMicro(), arg3)
+			up = string(upBytes)
+			down = string(downBytes)
+		} else {
+			migrationType = "sql"
+		}
 
-		upFile := fra.RootPath + "/migrations/" + fileName + "." + dbType + ".up.sql"
-		downFile := fra.RootPath + "/migrations/" + fileName + "." + dbType + ".down.sql"
-
-		err := copyFileFromTemplate("templates/migrations/migration."+dbType+".up.sql", upFile)
+		err := fra.CreatePopMigration([]byte(up), []byte(down), arg3, migrationType)
 		if err != nil {
 			exitGracefully(err)
 		}
-		err = copyFileFromTemplate("templates/migrations/migration."+dbType+".down.sql", downFile)
-		if err != nil {
-			exitGracefully(err)
-		}
+
 	case "auth":
 		err := doAuth()
 		if err != nil {
@@ -120,7 +123,7 @@ func doMake(arg2, arg3 string) error {
 		if err != nil {
 			exitGracefully(err)
 		}
-		
+
 	case "session":
 		err := doSessionTable()
 		if err != nil {

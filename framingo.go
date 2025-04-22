@@ -3,22 +3,27 @@ package framinGo
 import (
 	"fmt"
 	"log"
-	"net/http"
+	"net"
+	"net/rpc"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/CloudyKit/jet/v6"
+	"github.com/Env-Co-Ltd/framinGo/cache"
+	"github.com/Env-Co-Ltd/framinGo/filesystems/miniofilesystem"
+	"github.com/Env-Co-Ltd/framinGo/filesystems/s3filesystem"
+	"github.com/Env-Co-Ltd/framinGo/filesystems/sftpfilesystem"
+	"github.com/Env-Co-Ltd/framinGo/filesystems/webdavfilesystem"
+	"github.com/Env-Co-Ltd/framinGo/mailer"
+	"github.com/Env-Co-Ltd/framinGo/render"
+	"github.com/Env-Co-Ltd/framinGo/session"
 	"github.com/alexedwards/scs/v2"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/go-chi/chi/v5"
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
-	"github.com/mirei965/framinGo/cache"
-	"github.com/mirei965/framinGo/mailer"
-	"github.com/mirei965/framinGo/render"
-	"github.com/mirei965/framinGo/session"
 	"github.com/robfig/cron/v3"
 )
 
@@ -29,26 +34,33 @@ var myBadgerCache *cache.BadgerCache
 var redisPool *redis.Pool
 var badgerConn *badger.DB
 
+var maintenanceMode bool
+
 // Celeritas is the overall type for the Celeritas package. Members that are exported in this type
 // are available to any application that uses it.
 type FraminGo struct {
-	AppName    string
-	Debug      bool
-	Version    string
-	ErrorLog   *log.Logger
-	InfoLog    *log.Logger
-	RootPath   string
-	Routes     *chi.Mux
-	Render     *render.Render
-	Session    *scs.SessionManager
-	DB         Database
-	JetViews   *jet.Set
-	config     config
-	Encryption string
-	Cache      cache.Cache
-	Scheduler  *cron.Cron
-	Mail       *mailer.Mail
-	Server     Server
+	AppName     string
+	Debug       bool
+	Version     string
+	ErrorLog    *log.Logger
+	InfoLog     *log.Logger
+	RootPath    string
+	Routes      *chi.Mux
+	Render      *render.Render
+	Session     *scs.SessionManager
+	DB          Database
+	JetViews    *jet.Set
+	config      config
+	Encryption  string
+	Cache       cache.Cache
+	Scheduler   *cron.Cron
+	Mail        *mailer.Mail
+	Server      Server
+	FileSystems map[string]any
+	S3          s3filesystem.S3
+	Minio       miniofilesystem.Minio
+	SFTP        sftpfilesystem.SFTP
+	WebDAV      webdavfilesystem.WebDAV
 }
 
 type Server struct {
@@ -65,6 +77,12 @@ type config struct {
 	sessionType string
 	database    databaseConfig
 	redis       redisConfig
+	uploads     UploadConfig
+}
+
+type UploadConfig struct {
+	allowedMineTypes []string
+	maxUploadSize    int64
 }
 
 // New reads the .env file, creates our application config, populates the Celeritas type with settings
@@ -72,7 +90,7 @@ type config struct {
 func (f *FraminGo) New(rootPath string) error {
 	pathConfig := initPaths{
 		rootPath:    rootPath,
-		folderNames: []string{"handlers", "migrations", "views", "mail", "data", "public", "tmp", "logs", "middleware"},
+		folderNames: []string{"handlers", "migrations", "views", "mail", "data", "public", "tmp", "logs", "middleware", "screenshots"},
 	}
 
 	err := f.Init(pathConfig)
@@ -137,6 +155,18 @@ func (f *FraminGo) New(rootPath string) error {
 	f.RootPath = rootPath
 	f.Mail = f.createMailer()
 	f.Routes = f.routes().(*chi.Mux)
+	// upload config
+	exploded := strings.Split(os.Getenv("ALLOWED_FILETYPES"), ",")
+	var mineTypes []string
+	for _, m := range exploded {
+		mineTypes = append(mineTypes, m)
+	}
+	var maxUploadSize int64
+	if max, err := strconv.ParseInt(os.Getenv("MAX_UPLOAD_SIZE"), 10, 64); err != nil {
+		maxUploadSize = 10 << 20
+	} else {
+		maxUploadSize = int64(max)
+	}
 
 	f.config = config{
 		port:     os.Getenv("PORT"),
@@ -157,6 +187,10 @@ func (f *FraminGo) New(rootPath string) error {
 			Host:     os.Getenv("REDIS_HOST"),
 			Password: os.Getenv("REDIS_PASSWORD"),
 			prefix:   os.Getenv("REDIS_PREFIX"),
+		},
+		uploads: UploadConfig{
+			allowedMineTypes: mineTypes,
+			maxUploadSize:    maxUploadSize,
 		},
 	}
 
@@ -208,6 +242,7 @@ func (f *FraminGo) New(rootPath string) error {
 	}
 
 	f.createRenderer()
+	f.FileSystems = f.createFileSystems()
 
 	// メールリスナーの起動（nilチェック付き）
 	if f.Mail != nil && f.Mail.Jobs != nil && f.Mail.Results != nil {
@@ -228,34 +263,6 @@ func (f *FraminGo) Init(p initPaths) error {
 		}
 	}
 	return nil
-}
-
-// ListenAndServe starts the web server
-func (f *FraminGo) ListenAndServe() {
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%s", os.Getenv("PORT")),
-		ErrorLog:     f.ErrorLog,
-		Handler:      f.Routes,
-		IdleTimeout:  30 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 600 * time.Second,
-	}
-
-	if f.DB.Pool != nil {
-		defer f.DB.Pool.Close()
-	}
-
-	if redisPool != nil {
-		defer redisPool.Close()
-	}
-
-	if badgerConn != nil {
-		defer badgerConn.Close()
-	}
-
-	f.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
-	err := srv.ListenAndServe()
-	f.ErrorLog.Fatal(err)
 }
 
 func (f *FraminGo) checkDotEnv(path string) error {
@@ -380,4 +387,95 @@ func (f *FraminGo) BuildDSN() string {
 	}
 
 	return dsn
+}
+
+func (f *FraminGo) createFileSystems() map[string]any {
+	fileSystems := make(map[string]any)
+	if os.Getenv("S3_KEY") != "" {
+		s3 := s3filesystem.S3{
+			Key:      os.Getenv("S3_KEY"),
+			Secret:   os.Getenv("S3_SECRET"),
+			Region:   os.Getenv("S3_REGION"),
+			Endpoint: os.Getenv("S3_ENDPOINT"),
+			Bucket:   os.Getenv("S3_BUCKET"),
+		}
+		fileSystems["S3"] = s3
+		f.S3 = s3
+	}
+	if os.Getenv("MINIO_SECRET") != "" {
+		useSSL := false
+		if os.Getenv("MINIO_USESSL") == "true" {
+			useSSL = true
+		}
+		minio := miniofilesystem.Minio{
+			Endpoint: os.Getenv("MINIO_ENDPOINT"),
+			Key:      os.Getenv("MINIO_KEY"),
+			Secret:   os.Getenv("MINIO_SECRET"),
+			Region:   os.Getenv("MINIO_REGION"),
+			UseSSL:   useSSL,
+			Bucket:   os.Getenv("MINIO_BUCKET"),
+		}
+		fileSystems["MINIO"] = minio
+		f.Minio = minio
+	}
+
+	if os.Getenv("SFTP_HOST") != "" {
+		sftp := sftpfilesystem.SFTP{
+			Host: os.Getenv("SFTP_HOST"),
+			User: os.Getenv("SFTP_USER"),
+			Pass: os.Getenv("SFTP_PASS"),
+			Port: os.Getenv("SFTP_PORT"),
+		}
+		fileSystems["SFTP"] = sftp
+		f.SFTP = sftp
+	}
+
+	if os.Getenv("WEBDAV_HOST") != "" {
+		webDav := webdavfilesystem.WebDAV{
+			URL:  os.Getenv("WEBDAV_HOST"),
+			User: os.Getenv("WEBDAV_USER"),
+			Pass: os.Getenv("WEBDAV_PASS"),
+		}
+		fileSystems["WEBDAV"] = webDav
+		f.WebDAV = webDav
+	}
+
+	return fileSystems
+}
+
+type RPCServer struct{}
+
+func (r *RPCServer) MaintenanceMode(inMaintenanceMode bool, resp *string) error {
+	if inMaintenanceMode {
+		maintenanceMode = true
+		*resp = "Server is in maintenance mode"
+	} else {
+		maintenanceMode = false
+		*resp = "Server is running normally"
+	}
+	return nil
+}
+
+func (f *FraminGo) ListenRPC() {
+	if os.Getenv("RCP_PORT") != "" {
+		f.InfoLog.Println("Starting RCP server on port", os.Getenv("RCP_PORT"))
+		err := rpc.Register(new(RPCServer))
+		if err != nil {
+			f.ErrorLog.Println(err)
+			return
+		}
+		listen, err := net.Listen("tcp", "127.0.0.1:"+os.Getenv("RCP_PORT"))
+		if err != nil {
+			f.ErrorLog.Println(err)
+			return
+		}
+		for {
+			rcpConn, err := listen.Accept()
+			if err != nil {
+				f.ErrorLog.Println(err)
+				continue
+			}
+			go rpc.ServeConn(rcpConn)
+		}
+	}
 }

@@ -14,6 +14,7 @@ import (
 )
 
 var appURL string
+
 func doNew(appName string) {
 	appName = strings.ToLower(appName)
 	appURL = appName
@@ -27,7 +28,7 @@ func doNew(appName string) {
 	//git clone the skeleton application
 	color.Green("\tCloning repository...")
 	_, err := git.PlainClone("./"+appName, false, &git.CloneOptions{
-		URL:      "https://github.com/mirei965/framingo-project.git",
+		URL:      "https://github.com/Env-Co-Ltd/framingo-project.git",
 		Progress: os.Stdout,
 		Depth:    1,
 	})
@@ -92,11 +93,11 @@ func doNew(appName string) {
 
 	//update the go.mod file
 	color.Yellow("\tCreating go.mod file...")
-	_ = os.Remove(fmt.Sprintf("./"+appName+"/go.mod"))
-  data, err = templateFS.ReadFile("templates/go.mod.txt")
-  if err != nil {
-    exitGracefully(err)
-  }
+	_ = os.Remove(fmt.Sprintf("./" + appName + "/go.mod"))
+	data, err = templateFS.ReadFile("templates/go.mod.txt")
+	if err != nil {
+		exitGracefully(err)
+	}
 
 	mod := string(data)
 	mod = strings.ReplaceAll(mod, "${APP_NAME}", appURL)
@@ -106,17 +107,27 @@ func doNew(appName string) {
 	}
 
 	//update existing  .go file with correct name/imports
-  color.Yellow("\tUpdating source files...")
-  os.Chdir("./"+appName)
-  updateSource()
+	color.Yellow("\tUpdating source files...")
+	os.Chdir("./" + appName)
+	updateSource()
 
 	//run mod tidy in the project folder
 	color.Yellow("\tRunning go mod tidy...")
-	cmd := exec.Command("go", "mod", "tidy")
+
+	cmd := exec.Command("go", "get", "github.com/Env-Co-Ltd/framinGo")
 	err = cmd.Start()
 	if err != nil {
 		exitGracefully(err)
 	}
-	color.Green("\tSuccessfully created new Framingo project! with: " +appURL)
+
+	//run mod tidy in the project folder
+	cmd = exec.Command("go", "mod", "tidy")
+	err = cmd.Start()
+	if err != nil {
+		exitGracefully(err)
+	}
+
+	
+	color.Green("\tSuccessfully created new Framingo project! with: " + appURL)
 	color.Green("\tTo start your awsome project")
 }
