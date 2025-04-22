@@ -96,7 +96,6 @@ func doNew(appName string) {
 		}
 	}
 
-	// Only try to remove if they exist
 	_ = os.Remove(fmt.Sprintf("./%s/Makefile.mac", appName))
 	_ = os.Remove(fmt.Sprintf("./%s/Makefile.windows", appName))
 
