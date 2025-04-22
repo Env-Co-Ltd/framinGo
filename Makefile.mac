@@ -1,3 +1,7 @@
+## build_cli: builds the command line tool framingo
+build_cli:
+	@go build -o framinGo ./cmd/cli
+
 ## test: runs all tests
 test:
 	@go test -v ./...
@@ -22,6 +26,7 @@ start:
 clean:
 	@rm -rf tmp
 	@rm -f coverage.out
+	@rm -f framinGo
 
 ## help: displays help
 help:

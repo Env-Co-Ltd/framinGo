@@ -138,4 +138,16 @@ func doNew(appName string) {
 
 	color.Green("\tSuccessfully created new Framingo project! with: " + appURL)
 	color.Green("\tTo start your awsome project")
+
+	// Build framinGo CLI in the new project directory
+	color.Yellow("\tBuilding framinGo CLI...")
+	buildCmd := exec.Command("go", "build", "-o", "framinGo", "../cmd/cli")
+	buildCmd.Dir = "./" + appName
+	err = buildCmd.Run()
+	if err != nil {
+		color.Red("Failed to build framinGo CLI: %v", err)
+	} else {
+		color.Green("\tframinGo CLI has been built successfully!")
+		color.Green("\tYou can now use ./framinGo commands in your project directory")
+	}
 }
