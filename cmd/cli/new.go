@@ -133,33 +133,28 @@ func doNew(appName string) {
 		color.Red("Failed to clone framinGo framework: %v", err)
 	}
 
-	cmd := exec.Command("go", "get", "github.com/Env-Co-Ltd/framinGo")
-	err = cmd.Start()
+	// Update dependencies
+	color.Yellow("\tUpdating dependencies...")
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = "./"
+	err = cmd.Run()
 	if err != nil {
 		exitGracefully(err)
 	}
 
-	//run mod tidy in the project folder
-	cmd = exec.Command("go", "mod", "tidy")
-	err = cmd.Start()
+	// Sync vendor directory
+	color.Yellow("\tSyncing vendor directory...")
+	cmd = exec.Command("go", "mod", "vendor")
+	cmd.Dir = "./"
+	err = cmd.Run()
 	if err != nil {
 		exitGracefully(err)
 	}
 
-	color.Green("\tSuccessfully created new Framingo project! with: " + appURL)
-	color.Green("\tTo start your awesome project, run: make start")
-
-	// Get the current working directory
-	currentDir, err := os.Getwd()
-	if err != nil {
-		color.Red("Failed to get current directory: %v", err)
-		return
-	}
-
-	// Build framinGo CLI in the new project directory
+	// Build framinGo CLI
 	color.Yellow("\tBuilding framinGo CLI...")
-	buildCmd := exec.Command("go", "build", "-o", "framinGo", "github.com/Env-Co-Ltd/framinGo/cmd/cli")
-	buildCmd.Dir = currentDir
+	buildCmd := exec.Command("go", "build", "-mod=vendor", "-o", "framinGo", "github.com/Env-Co-Ltd/framinGo/cmd/cli")
+	buildCmd.Dir = "./"
 	output, err := buildCmd.CombinedOutput()
 	if err != nil {
 		color.Red("Failed to build framinGo CLI: %v\nOutput: %s", err, output)
