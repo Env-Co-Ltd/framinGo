@@ -7,7 +7,7 @@ require (
 	github.com/upper/db/v4 v4.10.0
 )
 
-replace github.com/Env-Co-Ltd/framinGo => ./framinGo
+
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
