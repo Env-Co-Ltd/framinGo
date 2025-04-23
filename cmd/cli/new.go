@@ -136,5 +136,5 @@ func doNew(appName string) {
 	}
 
 	color.Green("\tSuccessfully created new Framingo project! with: " + appURL)
-	color.Green("\tTo start your awsome project")
+	color.Green("\tTo start your awesome project, run: make start")
 }
