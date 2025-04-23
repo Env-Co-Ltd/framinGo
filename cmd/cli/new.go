@@ -123,31 +123,52 @@ func doNew(appName string) {
 	color.Yellow("\tRunning go mod tidy...")
 
 	cmd := exec.Command("go", "get", "github.com/Env-Co-Ltd/framinGo")
-	err = cmd.Start()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
 		exitGracefully(err)
 	}
 
 	//run mod tidy in the project folder
 	cmd = exec.Command("go", "mod", "tidy")
-	err = cmd.Start()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
 		exitGracefully(err)
 	}
 
-	// Build framinGo CLI in the new project directory
-	color.Yellow("\tBuilding framinGo CLI...")
-	buildCmd := exec.Command("go", "build", "-o", "framinGo", "github.com/Env-Co-Ltd/framinGo/cmd/cli")
-	buildCmd.Dir = "./"
-	buildCmd.Stdout = os.Stdout
-	buildCmd.Stderr = os.Stderr
-	err = buildCmd.Run()
+	color.Yellow("\tRunning go mod vendor...")
+	cmd = exec.Command("go", "mod", "vendor")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	if err != nil {
-		color.Red("Failed to build framinGo CLI: %v", err)
-	} else {
-		color.Green("\tframinGo CLI has been built successfully!")
-		color.Green("\tYou can now use ./framinGo commands in your project directory")
+		exitGracefully(err)
+	}
+
+	// Copy static files
+	color.Yellow("\tCopying static files...")
+	err = copyStaticFiles(appName)
+	if err != nil {
+		exitGracefully(err)
 	}
 
 	color.Green("\tSuccessfully created new Framingo project! with: " + appURL)
+	color.Green("\tTo start your project, run: make start")
+}
+
+func copyStaticFiles(appName string) error {
+	// 静的ファイルのディレクトリを作成
+	dirs := []string{"public", "public/images", "public/css", "public/js"}
+	for _, dir := range dirs {
+		err := os.MkdirAll(fmt.Sprintf("./%s/%s", appName, dir), 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+
+	return nil
 }
