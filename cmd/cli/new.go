@@ -117,7 +117,6 @@ func doNew(appName string) {
 	//update existing  .go file with correct name/imports
 	color.Yellow("\tUpdating source files...")
 	projectDir := "./" + appName
-	os.Chdir(projectDir)
 	updateSource()
 
 	//run mod tidy in the project folder
@@ -125,7 +124,7 @@ func doNew(appName string) {
 
 	// Clone the main framinGo framework
 	color.Yellow("\tCloning framinGo framework...")
-	_, err = git.PlainClone("framinGo", false, &git.CloneOptions{
+	_, err = git.PlainClone(projectDir+"/framinGo", false, &git.CloneOptions{
 		URL:      "https://github.com/Env-Co-Ltd/framinGo.git",
 		Progress: os.Stdout,
 		Depth:    1,
