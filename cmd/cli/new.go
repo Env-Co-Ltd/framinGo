@@ -116,71 +116,15 @@ func doNew(appName string) {
 
 	//update existing  .go file with correct name/imports
 	color.Yellow("\tUpdating source files...")
-	projectDir := "./" + appName
+	os.Chdir("./" + appName)
 	updateSource()
 
 	//run mod tidy in the project folder
 	color.Yellow("\tRunning go mod tidy...")
 
-	// Clone the main framinGo framework
-	color.Yellow("\tCloning framinGo framework...")
-	_, err = git.PlainClone(projectDir+"/framinGo", false, &git.CloneOptions{
-		URL:      "https://github.com/Env-Co-Ltd/framinGo.git",
-		Progress: os.Stdout,
-		Depth:    1,
-	})
+	cmd := exec.Command("go", "get", "github.com/Env-Co-Ltd/framinGo")
+	err = cmd.Start()
 	if err != nil {
-		color.Red("Failed to clone framinGo framework: %v", err)
 		exitGracefully(err)
-	}
-
-	// Add framinGo as a dependency
-	color.Yellow("\tAdding framinGo dependency...")
-	cmd := exec.Command("go", "mod", "edit", "-require", "github.com/Env-Co-Ltd/framinGo")
-	cmd.Dir = projectDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		color.Red("Failed to add framinGo dependency: %v", err)
-		exitGracefully(err)
-	}
-
-	// Add replace directive
-	color.Yellow("\tAdding replace directive...")
-	cmd = exec.Command("go", "mod", "edit", "-replace", "github.com/Env-Co-Ltd/framinGo=./framinGo")
-	cmd.Dir = projectDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		color.Red("Failed to add replace directive: %v", err)
-		exitGracefully(err)
-	}
-
-	// Update dependencies
-	color.Yellow("\tUpdating dependencies...")
-	cmd = exec.Command("go", "mod", "tidy")
-	cmd.Dir = projectDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		color.Red("Failed to update dependencies: %v", err)
-		exitGracefully(err)
-	}
-
-	// Build framinGo CLI
-	color.Yellow("\tBuilding framinGo CLI...")
-	buildCmd := exec.Command("go", "build", "-o", "framinGo", "./framinGo/cmd/cli")
-	buildCmd.Dir = projectDir
-	buildCmd.Stdout = os.Stdout
-	buildCmd.Stderr = os.Stderr
-	err = buildCmd.Run()
-	if err != nil {
-		color.Red("Failed to build framinGo CLI: %v", err)
-	} else {
-		color.Green("\tframinGo CLI has been built successfully!")
-		color.Green("\tYou can now use ./framinGo commands in your project directory")
 	}
 }
