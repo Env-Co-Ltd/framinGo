@@ -131,11 +131,36 @@ func doNew(appName string) {
 	})
 	if err != nil {
 		color.Red("Failed to clone framinGo framework: %v", err)
+		exitGracefully(err)
+	}
+
+	// Add framinGo as a dependency
+	color.Yellow("\tAdding framinGo dependency...")
+	cmd := exec.Command("go", "mod", "edit", "-require", "github.com/Env-Co-Ltd/framinGo@latest")
+	cmd.Dir = projectDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		color.Red("Failed to add framinGo dependency: %v", err)
+		exitGracefully(err)
+	}
+
+	// Add replace directive
+	color.Yellow("\tAdding replace directive...")
+	cmd = exec.Command("go", "mod", "edit", "-replace", "github.com/Env-Co-Ltd/framinGo=./framinGo")
+	cmd.Dir = projectDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		color.Red("Failed to add replace directive: %v", err)
+		exitGracefully(err)
 	}
 
 	// Update dependencies
 	color.Yellow("\tUpdating dependencies...")
-	cmd := exec.Command("go", "mod", "tidy")
+	cmd = exec.Command("go", "mod", "tidy")
 	cmd.Dir = projectDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -145,21 +170,9 @@ func doNew(appName string) {
 		exitGracefully(err)
 	}
 
-	// Sync vendor directory
-	color.Yellow("\tSyncing vendor directory...")
-	cmd = exec.Command("go", "mod", "vendor")
-	cmd.Dir = projectDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	if err != nil {
-		color.Red("Failed to sync vendor directory: %v", err)
-		exitGracefully(err)
-	}
-
 	// Build framinGo CLI
 	color.Yellow("\tBuilding framinGo CLI...")
-	buildCmd := exec.Command("go", "build", "-mod=vendor", "-o", "framinGo", "./framinGo/cmd/cli")
+	buildCmd := exec.Command("go", "build", "-o", "framinGo", "./framinGo/cmd/cli")
 	buildCmd.Dir = projectDir
 	buildCmd.Stdout = os.Stdout
 	buildCmd.Stderr = os.Stderr
