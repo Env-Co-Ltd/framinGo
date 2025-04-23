@@ -116,7 +116,8 @@ func doNew(appName string) {
 
 	//update existing  .go file with correct name/imports
 	color.Yellow("\tUpdating source files...")
-	os.Chdir("./" + appName)
+	projectDir := "./" + appName
+	os.Chdir(projectDir)
 	updateSource()
 
 	//run mod tidy in the project folder
@@ -124,7 +125,7 @@ func doNew(appName string) {
 
 	// Clone the main framinGo framework
 	color.Yellow("\tCloning framinGo framework...")
-	_, err = git.PlainClone("./framinGo", false, &git.CloneOptions{
+	_, err = git.PlainClone("framinGo", false, &git.CloneOptions{
 		URL:      "https://github.com/Env-Co-Ltd/framinGo.git",
 		Progress: os.Stdout,
 		Depth:    1,
@@ -136,28 +137,36 @@ func doNew(appName string) {
 	// Update dependencies
 	color.Yellow("\tUpdating dependencies...")
 	cmd := exec.Command("go", "mod", "tidy")
-	cmd.Dir = "./"
+	cmd.Dir = projectDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
+		color.Red("Failed to update dependencies: %v", err)
 		exitGracefully(err)
 	}
 
 	// Sync vendor directory
 	color.Yellow("\tSyncing vendor directory...")
 	cmd = exec.Command("go", "mod", "vendor")
-	cmd.Dir = "./"
+	cmd.Dir = projectDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
+		color.Red("Failed to sync vendor directory: %v", err)
 		exitGracefully(err)
 	}
 
 	// Build framinGo CLI
 	color.Yellow("\tBuilding framinGo CLI...")
-	buildCmd := exec.Command("go", "build", "-mod=vendor", "-o", "framinGo", "github.com/Env-Co-Ltd/framinGo/cmd/cli")
-	buildCmd.Dir = "./"
-	output, err := buildCmd.CombinedOutput()
+	buildCmd := exec.Command("go", "build", "-mod=vendor", "-o", "framinGo", "./framinGo/cmd/cli")
+	buildCmd.Dir = projectDir
+	buildCmd.Stdout = os.Stdout
+	buildCmd.Stderr = os.Stderr
+	err = buildCmd.Run()
 	if err != nil {
-		color.Red("Failed to build framinGo CLI: %v\nOutput: %s", err, output)
+		color.Red("Failed to build framinGo CLI: %v", err)
 	} else {
 		color.Green("\tframinGo CLI has been built successfully!")
 		color.Green("\tYou can now use ./framinGo commands in your project directory")
