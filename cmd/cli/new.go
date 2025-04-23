@@ -136,7 +136,7 @@ func doNew(appName string) {
 
 	// Add framinGo as a dependency
 	color.Yellow("\tAdding framinGo dependency...")
-	cmd := exec.Command("go", "mod", "edit", "-require", "github.com/Env-Co-Ltd/framinGo@latest")
+	cmd := exec.Command("go", "mod", "edit", "-require", "github.com/Env-Co-Ltd/framinGo")
 	cmd.Dir = projectDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
