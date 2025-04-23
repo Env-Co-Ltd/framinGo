@@ -122,6 +122,17 @@ func doNew(appName string) {
 	//run mod tidy in the project folder
 	color.Yellow("\tRunning go mod tidy...")
 
+	// Clone the main framinGo framework
+	color.Yellow("\tCloning framinGo framework...")
+	_, err = git.PlainClone("./framinGo", false, &git.CloneOptions{
+		URL:      "https://github.com/Env-Co-Ltd/framinGo.git",
+		Progress: os.Stdout,
+		Depth:    1,
+	})
+	if err != nil {
+		color.Red("Failed to clone framinGo framework: %v", err)
+	}
+
 	cmd := exec.Command("go", "get", "github.com/Env-Co-Ltd/framinGo")
 	err = cmd.Start()
 	if err != nil {
